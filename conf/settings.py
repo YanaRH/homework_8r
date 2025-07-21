@@ -1,17 +1,14 @@
+import os
+from pathlib import Path
+from datetime import timedelta
 
-env = Env()
-env.read_env()
-
+# Путь к корневой директории проекта
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
-SECRET_KEY = env.str("SECRET_KEY")
-
-DEBUG = env.bool("DEBUG")
-
+# Настройки
+SECRET_KEY = os.getenv("SECRET_KEY", "your_default_secret_key")  # Установите значение по умолчанию
+DEBUG = os.getenv("DEBUG", "False") == "True"  # Установите значение по умолчанию
 ALLOWED_HOSTS = []
-
-
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -20,7 +17,6 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-
     'rest_framework',
     'django_filters',
     'rest_framework_simplejwt',
@@ -60,20 +56,17 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'conf.wsgi.application'
 
-
-# Database
-
+# База данных
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': env.str("DB_NAME"),
-        'USER': env.str("DB_USER"),
-        'PASSWORD': env.str("DB_PASSWORD"),
-        'HOST': env.str("DB_HOST"),
-        'PORT': env.str("DB_PORT"),
+        'NAME': os.getenv("DB_NAME"),
+        'USER': os.getenv("DB_USER"),
+        'PASSWORD': os.getenv("DB_PASSWORD"),
+        'HOST': os.getenv("DB_HOST"),
+        'PORT': os.getenv("DB_PORT"),
     }
 }
-
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -90,57 +83,49 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
-
-LANGUAGE_CODE = 'ru-Ru'
-
+LANGUAGE_CODE = 'ru-RU'
 TIME_ZONE = 'Europe/Moscow'
-
 USE_I18N = True
-
 USE_TZ = True
 
 STATIC_URL = 'static/'
-
-STATIC_DIRS = os.path.join(BASE_DIR, 'static')
-STATICFILES_DIRS = [(os.path.join(BASE_DIR, 'static'))]
+STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-# AUTH_USER_MODEL = 'users.User'
-
 LOGIN_REDIRECT_URL = '/'
+LOGIN_URL = '/users/login/'  # Исправлено на правильный путь
 
-LOGIN_URL = '/users.Login/'
-
+# Настройки электронной почты
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.yandex.ru'
 EMAIL_PORT = 465
 EMAIL_USE_TLS = False
 EMAIL_USE_SSL = True
-EMAIL_HOST_USER = env.str('EMAIL_HOST_USER')
-EMAIL_HOST_PASSWORD = env.str('EMAIL_HOST_PASSWORD')
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 SERVER_EMAIL = EMAIL_HOST_USER
 
 AUTH_USER_MODEL = "users.User"
-
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework_simplejwt.authentication.JWTAuthentication'],
+        'rest_framework_simplejwt.authentication.JWTAuthentication'
+    ],
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated']
+        'rest_framework.permissions.IsAuthenticated'
+    ]
 }
 
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=180),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=1)}
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1)
+}
 
-STRIPE_API_KEY = env.str("STRIPE_API_KEY")
-
+STRIPE_API_KEY = os.getenv("STRIPE_API_KEY")
 
 SWAGGER_SETTINGS = {
     'SECURITY_DEFINITIONS': {
@@ -153,12 +138,13 @@ SWAGGER_SETTINGS = {
 }
 
 CELERY_TIMEZONE = TIME_ZONE
-CELERY_BROKER_URL = env.str("CELERY_BROKER_URL")
-CELERY_RESULT_BACKEND = env.str("CELERY_RESULT_BACKEND")
+CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL")
+CELERY_RESULT_BACKEND = os.getenv("CELERY_RESULT_BACKEND")
 CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
-
 
 CELERY_BEAT_SCHEDULE = {
     'block_inactive_users': {
         'task': 'users.tasks.block_inactive_users',
-        'schedule': timedelta(days=1)}}
+        'schedule': timedelta(days=1)
+    }
+}

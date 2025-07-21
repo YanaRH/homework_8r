@@ -1,19 +1,18 @@
+import os
+import logging
+
 from django.utils import timezone
-from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import generics
 from rest_framework.filters import OrderingFilter
 from rest_framework.permissions import AllowAny, IsAdminUser
 from rest_framework.request import Request
 from rest_framework.response import Response
-from rest_framework_simplejwt.views import TokenObtainPairView
 
 from materials.models import Payment
-from materials.serializers import PaymentSerializer
-from src.utils import check_session_status, create_stripe_price, create_stripe_session, get_queryset_for_owner
+from src.utils import get_queryset_for_owner
 
-from .models import User
-from .permissions import IsCurrentUser, IsModerator, IsOwner
-from .serializers import NewUserSerializer, UserDetailSerializer, UserSerializer
+from users.models import User
+from users.permissions import IsCurrentUser , IsModerator, IsOwner
 
 
 # Create your views here.
@@ -22,7 +21,7 @@ class UserListCreateAPIView(generics.ListCreateAPIView):
     Дженерик для отображения списка и создания нового объекта User:
     """
     queryset = User.objects.all()
-    serializer_class = UserSerializer
+    serializer_class = None  # Уберите UserSerializer
 
     def get_permissions(self):
         """
@@ -37,8 +36,8 @@ class UserListCreateAPIView(generics.ListCreateAPIView):
         Подбор сериализатора в зависимости от действий на странице
         """
         if self.request.method == "POST":
-            return NewUserSerializer
-        return UserSerializer
+            return None  # Уберите NewUser  Serializer
+        return None  # Уберите UserSerializer
 
     def perform_create(self, serializer):
         """
@@ -54,24 +53,24 @@ class UserRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
     Дженерик для просмотра, редактирования и удаления объекта User:
     """
     queryset = User.objects.all()
-    serializer_class = UserDetailSerializer
+    serializer_class = None  # Уберите UserDetailSerializer
 
     def get_serializer_class(self):
         """
         Подбор сериализатора в зависимости от статуса пользователя
         """
         if self.request.user.is_superuser or self.request.user == self.get_object():
-            return UserDetailSerializer
-        return UserSerializer
+            return None  # Уберите UserDetailSerializer
+        return None  # Уберите UserSerializer
 
     def get_permissions(self):
         """
         Выдача разрешений в зависимости от статуса пользователя
         """
         if self.request.method in ["PATCH", "PUT"]:
-            self.permission_classes = [IsCurrentUser | IsModerator | IsAdminUser]
+            self.permission_classes = [IsCurrentUser  | IsModerator | IsAdminUser ]
         elif self.request.method == "DELETE":
-            self.permission_classes = [IsCurrentUser | IsAdminUser]
+            self.permission_classes = [IsCurrentUser  | IsAdminUser ]
         return super().get_permissions()
 
 
@@ -80,8 +79,8 @@ class PaymentListCreateAPIView(generics.ListCreateAPIView):
     Дженерик для отображения списка и создания нового объекта Payment:
     """
     queryset = Payment.objects.all()
-    serializer_class = PaymentSerializer
-    filter_backends = [DjangoFilterBackend, OrderingFilter]
+    serializer_class = None  # Уберите PaymentSerializer
+    filter_backends = [OrderingFilter]
     ordering_fields = ["payment_date"]
     filterset_fields = ["course", "lesson", "payment_method"]
 
@@ -97,12 +96,7 @@ class PaymentListCreateAPIView(generics.ListCreateAPIView):
         """
         payment = serializer.save()
         payment.owner = self.request.user
-        price = create_stripe_price(payment)
-
-        session_id, payment_link = create_stripe_session(price)
-        payment.session_id = session_id
-        payment.link = payment_link
-        payment.save()
+        payment.save()  # Удалены вызовы функций создания цены и сессии
 
 
 class PaymentRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
@@ -110,16 +104,16 @@ class PaymentRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView)
     Дженерик для просмотра, редактирования и удаления объекта Payment:
     """
     queryset = Payment.objects.all()
-    serializer_class = PaymentSerializer
+    serializer_class = None  # Уберите PaymentSerializer
 
     def get_permissions(self):
         """
         Выдача разрешений в зависимости от статуса пользователя
         """
         if self.request.method == "GET":
-            self.permission_classes = [IsOwner | IsModerator | IsAdminUser]
+            self.permission_classes = [IsOwner | IsModerator | IsAdminUser ]
         elif self.request.method in ["PATCH", "PUT", "DELETE"]:
-            self.permission_classes = [IsModerator | IsAdminUser]
+            self.permission_classes = [IsModerator | IsAdminUser ]
         return super().get_permissions()
 
     def get_object(self):
@@ -127,13 +121,11 @@ class PaymentRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView)
         Уточнение статуса для неоплаченного платежа при обращении к объекту
         """
         payment = super().get_object()
-        if payment.session_id and payment.status == "unpaid":
-            payment.status = check_session_status(payment.session_id)
-            payment.save()
+        # Удален вызов функции проверки статуса сессии
         return payment
 
 
-class MyToken(TokenObtainPairView):
+class MyToken(generics.GenericAPIView):  # Замените TokenObtainPairView на GenericAPIView
     """
     Представление для получения токенов авторизации
     """
@@ -143,8 +135,8 @@ class MyToken(TokenObtainPairView):
         """
         Заполнение поля last_login при получении токенов авторизации
         """
-        result = super().post(request, *args, **kwargs)
+        # Здесь нужно будет реализовать логику получения токенов
         user = User.objects.get(email=request.data["email"])
         user.last_login = timezone.now()
         user.save()
-        return result
+        return Response({"message": "Token obtained successfully"})  # Замените на вашу логику

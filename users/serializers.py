@@ -1,37 +1,33 @@
-from rest_framework import serializers
+import os
 
-from materials.serializers import PaymentSerializer
-
-from .models import User
-
-
-class NewUserSerializer(serializers.ModelSerializer):
+class NewUser :
     """
     Сериализатор для модели User для авторизации пользователя
     """
     class Meta:
-        model = User
+        model = None  # Уберите User
         fields = "__all__"
 
 
-class UserSerializer(serializers.ModelSerializer):
+class User:
     """
     Сериализатор для модели User
     """
 
     class Meta:
-        model = User
+        model = None  # Уберите User
         fields = ["id", "email", "username", "first_name", "country", "avatar"]
 
 
-class UserDetailSerializer(serializers.ModelSerializer):
+class UserDetail:
     """
     Сериализатор для детальной информации об объекте модели User
     """
 
-    payments_history = PaymentSerializer(source="payments", many=True)
+    payments_history = None  # Уберите PaymentSerializer
 
     class Meta:
-        model = User
+        model = None  # Уберите User
         fields = ["id", "email", "password", "username", "first_name", "last_name", "phone_number",
                   "country", "avatar", "payments_history"]
+

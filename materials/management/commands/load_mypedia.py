@@ -1,22 +1,23 @@
+import os
 from django.core.management import call_command
 from django.core.management.base import BaseCommand
 
-from mypedia.models import Course, Lesson, Payment, Subscription
-
-
 class Command(BaseCommand):
     """
-    Заполнение БД фикстурами курсов, уроков и платежей сервиса
+    Заполнение БД фикстурами
     """
 
     def handle(self, *args: list, **kwargs: dict) -> None:
+        # Получаем пути к файлам фикстур из переменных окружения или используем значения по умолчанию
+        mypedia_fixture = os.getenv('MYPEDIA_FIXTURE', 'mypedia.json')
+        payments_fixture = os.getenv('PAYMENTS_FIXTURE', 'payments.json')
 
-        Payment.objects.all().delete()
-        Subscription.objects.all().delete()
-        Lesson.objects.all().delete()
-        Course.objects.all().delete()
+        # Удаление объектов можно реализовать здесь, если нужно
 
-        call_command('loaddata', 'mypedia.json')
-        call_command('loaddata', 'payments.json')
+        # Загружаем фикстуры
+        call_command('loaddata', mypedia_fixture)
+        call_command('loaddata', payments_fixture)
 
-        self.stdout.write(self.style.SUCCESS("Фикстуры из файлов mypedia.json и payments.json успешно загружены"))
+        self.stdout.write(self.style.SUCCESS(
+            f"Фикстуры из файлов {mypedia_fixture} и {payments_fixture} успешно загружены"
+        ))

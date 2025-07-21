@@ -1,18 +1,17 @@
+import os
 from django.core.management import call_command
 from django.core.management.base import BaseCommand
 
-from users.models import Payment
-
-
 class Command(BaseCommand):
     """
-    Заполнение БД фикстурой платежей сервиса
+    Заполнение БД фикстурой
     """
 
     def handle(self, *args: list, **kwargs: dict) -> None:
+        # Удаление всех объектов, если это необходимо
+        # Уберите или измените следующую строку в зависимости от вашей логики
+        # SomeModel.objects.all().delete()
 
-        Payment.objects.all().delete()
+        call_command('loaddata', 'data.json')  # Измените имя файла на нужное
 
-        call_command('loaddata', 'payments.json')
-
-        self.stdout.write(self.style.SUCCESS("Фикстуры из файла payments.json успешно загружены"))
+        self.stdout.write(self.style.SUCCESS("Фикстуры из файла data.json успешно загружены"))
